@@ -9,9 +9,16 @@ import numpy as np
 # print('\n')
 # me = data1.merge(data2, how='left')
 # print(me)
+#
+# a = np.load('demo.npy', allow_pickle=True)
+# # graphTable=a.tolist()
+# print(a.shape)
+# for i in range(0,5):
+#     print(len(a[i]))
 
-a = np.load('demo.npy', allow_pickle=True)
-# graphTable=a.tolist()
-print(a.shape)
-for i in range(0,5):
-    print(len(a[i]))
+x = 1
+y = 1
+a = (x, y)
+print(a)
+y += 1
+print(a)

@@ -8,11 +8,12 @@ import numpy as np
 # # 设置value的显示长度为100，默认为50
 # pd.set_option('max_colwidth', 100)
 
+
 def getDataSet_Object():
-    '''
+    """
     读取数据集中双方的棋子
     :return:
-    '''
+    """
     path = './'
     filename = 'Object.csv'
     filepath = os.path.join(path, filename)
@@ -29,15 +30,53 @@ def getDataSet_Object():
         #     break
 
 
-def getDataSet_RoomRecord():
+def getDataSet_City():
+    """
+    读取数据集中双方的棋子
+    :return:
+    """
+    path = './'
+    filename = 'City1.csv'
+    filepath = os.path.join(path, filename)
+    with open(filepath, encoding='utf-8') as csvfile:
+        data = pd.read_csv(csvfile)
+        # print(len(data.columns))
+        data.drop(['Room', 'GameName', 'Army', 'ObjSonName', 'ObjIco', 'ObjIcon', 'C1', 'Scenario', 'Area', 'Level', 'Scale'], axis=1, inplace=True)
+        return data
+        # print(len(data.columns))
+        # # 按照文件名称进行分组，得到一局游戏中的双方棋子
+        # for index, group in data.groupby(by=['filename']):
+        #     print(index)
+        #     print(group)
+        #     break
+
+
+def getDataSet_Caijue():
     '''
+    读取数据集中的裁决表
+    :return:
+    '''
+    path = './'
+    filename = 'Caijue.csv'
+    filepath = os.path.join(path, filename)
+    with open(filepath, encoding='utf-8') as csvfile:
+        data = pd.read_csv(csvfile)
+        print(data.columns)
+        data.drop(['RoomID', 'Scenario', 'Area', 'Level', 'Scale'], axis=1, inplace=True)
+        # print(data.head())
+        return data
+
+
+def getDataSet_RoomRecord():
+    """
     读取数据集中推演过程
     :return: 返回推演序列，一个游戏为一个事件
-    '''
+    """
     path = './'
     filename = 'RoomRecord.csv'
     filepath = os.path.join(path, filename)
-    objdata = getDataSet_Object()
+    obj_data = getDataSet_Object()
+    # caijue_data = getDataSet_Caijue()
     totol_seq = []
     with open(filepath, encoding='utf-8') as csvfile:
         data = pd.read_csv(csvfile)
@@ -45,30 +84,35 @@ def getDataSet_RoomRecord():
                    'JmColor', 'JmResult', 'JmObjResult', 'Scenario', 'Area', 'Level', 'Scale'], axis=1, inplace=True)
         i = 0
         for index, group in data.groupby(by=['filename']):
+            print(index)
             i += 1
-            print(i)
+            # print(i)
             cur_seq = []
-            objs = objdata[objdata['filename'] == index]
+            objs = obj_data[obj_data['filename'] == index]
+            # caijues = caijue_data[caijue_data['filename'] == index]
             cols_to_use = objs.columns.difference(group.columns)
             group_merge = group.merge(objs[cols_to_use], left_on='ObjID', right_on='ID')
             group_merge.sort_values(by='DateAndTime',axis=0,ascending=True,inplace=True)
             # print(group_merge.columns)
             # print(group_merge.head())
+            vs = [0, 0]
             for _, row in group_merge.iterrows():
                 # print(row.index)
-                cur_item = (row['StageID'], row['GameColor'], row['ObjName'], action(row))
+                actions, vs = action(row, vs)
+                cur_item = (row['StageID'], row['GameColor'], row['ObjID'], row['ObjName'], actions, vs)
                 cur_seq.append(cur_item)
+                print(cur_item)
             totol_seq.append(cur_seq)
-            # if i == 5:
-            #     break
+            # print(cur_seq)
+            if i == 1:
+                break
     # print(totol_seq)
-    m = np.array(totol_seq)
-    print(m)
-    np.save('demo.npy', m)
-    return totol_seq
+    # m = np.array(totol_seq)
+    # np.save('demo.npy', m)
+    # return totol_seq
 
 def getDataSet_Map():
-    '''
+    """
     读取兵棋地图
         MapID 六角格坐标
         Elevation 海拔数据
@@ -81,41 +125,53 @@ def getDataSet_Map():
         HexEdge 六角格作用边 河流专用，|分隔，数字表示度方向
         Flag 道路类型 0一般道路，1一般公路，2等级公路
     :return:地图的dataframe
-    '''
+    """
     path = './map/'
     filename = 'map_processed.csv'
     filepath = os.path.join(path, filename)
     with open(filepath, encoding='utf-8') as csvfile:
         data = pd.read_csv(csvfile)
         print(data.columns)
-        print(data.head())
+        print(data)
 
 
-def action(row):
-    '''
+def action(row, vs):
+    """
     :param: RoomRecord 战斗记录中的一行数据 row
+    :param: vs 当前比分
     :return: 此回合的动作类型
-    '''
+    """
+    # print(row)
+    actions = []
     if row['ObjPass'] == 1:
-        return '行军'
-    elif row['ObjHide'] == 1:
-        return '掩蔽'
-    elif row['ObjKeep'] == 1:
-        return '被压制'
-    elif row['ObjNewPos'] != row['ObjPos']:
-        return '机动'
-    elif row['AttackID'] != 0:
-        return '攻击'
-    elif row['ObjInto'] != 0:
-        return '上车'
-    elif row['ObjOut'] != 0:
-        return '下车'
-    elif row['CityTake'] == 1:
-        return '占领地区'
-    return None
+        actions.append('行军')
+    if row['ObjHide'] == 1:
+        actions.append('掩蔽')
+    if row['ObjKeep'] == 1:
+        actions.append('被压制')
+    if row['ObjSon'] != 0:
+        actions.append('载人')
+    if (row['ObjNewPos'] != row['ObjPos']) or row['ObjRound'] != 0:
+        actions.append('机动')
+    if row['AttackID'] != 0:
+        actions.append('攻击')
+        if row['TarLost'] != 0:
+            score = row['ObjValue'] * row['TarLost']
+            if row['GameColor'] == 'RED':
+                vs[0] += score
+            else:
+                vs[1] += score
+    if row['ObjInto'] != 0:
+        actions.append('上车')
+    if row['ObjOut'] != 0:
+        actions.append('下车')
+    if row['CityTake'] == 1:
+        actions.append('占领地区')
+
+    return actions, vs[:]
+
 
 if __name__ == '__main__':
-#     objs = getDataSet_Object('201851912743 01-06-03-03-02 推演室1')
-#     print(objs[objs['ID'] == 14181])
+
     getDataSet_RoomRecord()
-#     # getDataSet_Map()
+#     getDataSet_Map()
