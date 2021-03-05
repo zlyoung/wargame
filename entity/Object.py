@@ -1,5 +1,5 @@
 class Object:
-    '''
+    """
     :param
     ID          棋子ID 每一场比赛不同
     # Room        推演室ID
@@ -8,7 +8,7 @@ class Object:
     GameColor   推演方
     # Army        编号
     ObjName     棋子名称
-    ObjDataID   棋子模型ID
+    # ObjDataID   棋子模型ID
     ObjSup      车上步兵ID
     ObjSon      能搭载哪些模型
     ObjSonNum   车上步兵棋子数量
@@ -71,7 +71,7 @@ class Object:
     Level       比赛级别 预赛
     Scale       比赛规模 个人
     :return
-    '''
+    """
 
 
     def __init__(self, ID, UserID, GameColor):

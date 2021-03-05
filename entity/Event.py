@@ -1,5 +1,5 @@
 class Event:
-    '''
+    """
     # DateAndTime     时间
     StageID         阶段ID（一共6个回合，24个阶段）
     # TimeID          一个阶段倒计时所在的秒（前15秒间瞄，后15秒最终射击）
@@ -42,7 +42,7 @@ class Event:
     # Area            地区 河北
     # Level           比赛级别 预赛
     # Scale           比赛规模 个人
-    '''
+    """
     def __init__(self):
 
 

@@ -1,5 +1,5 @@
 class Caijue:
-    '''
+    """
     AttackID        裁决ID 和RoomRecord表里的AttackID关联
     # RoomID          推演室ID
     Huihe           阶段ID
@@ -47,6 +47,6 @@ class Caijue:
     Area
     Level
     Scale
-    '''
+    """
     def __init__(self):
         pass
